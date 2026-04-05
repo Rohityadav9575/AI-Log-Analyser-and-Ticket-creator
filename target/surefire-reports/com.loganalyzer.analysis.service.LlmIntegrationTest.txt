@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.loganalyzer.analysis.service.LlmIntegrationTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.576 s -- in com.loganalyzer.analysis.service.LlmIntegrationTest

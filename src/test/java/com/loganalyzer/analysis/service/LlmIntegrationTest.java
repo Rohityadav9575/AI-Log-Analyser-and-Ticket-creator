@@ -31,7 +31,7 @@ class LlmIntegrationTest {
             props.load(is);
         }
 
-        String llmUrl = props.getProperty("llm.api.url");
+        String llmUrl = props.getProperty("llm.api-url");
         String model = props.getProperty("llm.model");
 
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -70,7 +70,7 @@ class LlmIntegrationTest {
         }
 
         // 1. Query LLM for an actual deep analysis of a mock log
-        String llmUrl = props.getProperty("llm.api.url");
+        String llmUrl = props.getProperty("llm.api-url");
         String model = props.getProperty("llm.model");
 
         org.springframework.http.client.SimpleClientHttpRequestFactory factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
@@ -118,5 +118,36 @@ class LlmIntegrationTest {
         jiraTicketService.dispatch(aiAnomaly);
         System.out.println("✅ Work complete! Check your Jira instance (Project: "
                 + props.getProperty("jira.project-key") + ") for the highly-detailed AI bug.");
+    }
+
+    @Test
+    void testModelResponse() throws Exception {
+        Properties props = new Properties();
+        try (InputStream is = LlmIntegrationTest.class.getClassLoader().getResourceAsStream("application.properties")) {
+            props.load(is);
+        }
+
+        String llmUrl = props.getProperty("llm.api-url");
+        String model = props.getProperty("llm.model");
+
+        RestTemplate restTemplate = new RestTemplate();
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("prompt", "Say 'Ollama is alive!' in a creative way.");
+        body.put("stream", false);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+
+        System.out.println("🤖 Sending creative prompt to: " + llmUrl + " using model: " + model);
+        ResponseEntity<String> response = restTemplate.exchange(llmUrl, HttpMethod.POST,
+                new HttpEntity<>(body, headers), String.class);
+
+        ObjectMapper mapper = new ObjectMapper();
+        String llmResponse = mapper.readTree(response.getBody()).path("response").asText();
+
+        System.out.println("\n✨ Model Response: \n\"" + llmResponse + "\"\n");
+        assertNotNull(llmResponse, "Model should return a response");
+        assertTrue(!llmResponse.isEmpty(), "Response should not be empty");
     }
 }
