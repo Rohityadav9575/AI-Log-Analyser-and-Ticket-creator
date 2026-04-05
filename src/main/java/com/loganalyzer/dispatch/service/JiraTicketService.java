@@ -86,6 +86,53 @@ public class JiraTicketService implements NotificationService {
         }
     }
 
+    public String createManualTicket(Map<String, String> fields) {
+        log.info("🚀 Manually creating JIRA Ticket: {}", fields.get("summary"));
+
+        try {
+            String url = jiraBaseUrl + "/rest/api/2/issue";
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Content-Type", "application/json");
+            
+            String auth = jiraUsername + ":" + jiraApiToken;
+            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+            headers.set("Authorization", "Basic " + encodedAuth);
+
+            Map<String, Object> body = new HashMap<>();
+            Map<String, Object> finalFields = new HashMap<>();
+
+            Map<String, String> project = new HashMap<>();
+            project.put("key", jiraProjectKey);
+
+            Map<String, String> issuetype = new HashMap<>();
+            issuetype.put("name", "Bug");
+
+            finalFields.put("project", project);
+            finalFields.put("summary", fields.get("summary"));
+            finalFields.put("description", fields.get("description"));
+            finalFields.put("priority", Map.of("name", fields.getOrDefault("priority", "Medium")));
+            finalFields.put("issuetype", issuetype);
+
+            body.put("fields", finalFields);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
+
+            if (jiraBaseUrl.contains("your-domain")) {
+                log.info("🔨 [MOCK] JIRA Manual Ticket Payload: {}", body);
+                return "Successfully created [MOCK] JIRA Ticket.";
+            } else {
+                ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.POST, request, String.class);
+                log.info("✅ Successfully created JIRA Ticket: {}", response.getBody());
+                return response.getBody();
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Failed to create manual JIRA Ticket", e);
+            throw new RuntimeException("Failed to create Jira ticket: " + e.getMessage());
+        }
+    }
+
     @Override
     public String notificationType() {
         return "JIRA";
