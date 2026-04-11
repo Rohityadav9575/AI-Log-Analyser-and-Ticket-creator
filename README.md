@@ -1,60 +1,91 @@
-# Java Log Analyzer: Project Features & Architecture
+# LogAI - Intelligent Log Analyzer & Ticket Creator
 
-This project is a multi-tenant log analysis and incident automation platform. It ingests logs, detects anomalies using both rule-based and AI-driven engines, and automatically creates tickets or notifications.
+LogAI is an AI-powered log analysis platform designed to detect anomalies in real-time, perform root cause analysis using Large Language Models (LLMs), and automate incident management via Jira and other notification channels.
 
-## Key Features
+## 🚀 Key Features
 
-1.  **Multi-Tenant Ingestion API**:
-    *   Exposes REST endpoints for log submission.
-    *   Supports tenant-specific contexts using `X-Tenant-ID`.
-    *   Handles file uploads and processes them line-by-line.
-2.  **Asynchronous Processing Pipeline**:
-    *   Uses **RabbitMQ** to decouple log ingestion from analysis and dispatching.
-    *   Ensures scalability and fault tolerance by queuing log events and anomalies.
-3.  **Hybrid Anomaly Detection Engine**:
-    *   **Regex Rule Engine**: Fast, deterministic detection of known patterns (e.g., "Exception", "ERROR").
-    *   **LLM Rule Engine (AI-Powered)**: Leverages Large Language Models to detect subtle, complex, or unknown anomalies that traditional patterns might miss.
-4.  **Automated Incident Management**:
-    *   **Jira Integration**: Automatically creates Jira tickets for detected anomalies.
-    *   **Notification System**: Sends email notifications to relevant stakeholders.
-5.  **Storage & Persistence**:
-    *   Uses **MongoDB** for flexible, schema-less storage of log events and detected anomalies.
+1.  **Real-time AI Log Analysis**: 
+    - Hybrid detection using **RegexRuleEngine** for known patterns and **LlmRuleEngine** for semantic anomaly detection.
+    - Distributed ingestion via **RabbitMQ** to handle high-volume log streams from multiple microservices.
+    
+2.  **Deep Diagnostic Tracing & Root Cause Analysis**:
+    - Automatic correlation of logs using `correlationId` to visualize execution traces.
+    - AI-driven suggested solutions for every detected anomaly, helping engineers resolve issues faster.
+    
+3.  **Automated Incident Orchestration**:
+    - Seamless integration with **Jira** for automated ticket creation.
+    - Real-time alerts via **Email/Slack** ensuring high-priority issues are never missed.
 
 ---
 
-## Technical Architecture Flow
+## 🏗️ System Architecture & Flow
 
-The following sequence diagram illustrates the end-to-end flow from log ingestion to ticket creation.
+The following diagram illustrates the end-to-end data flow from log ingestion to incident resolution:
 
-```mermaid
-sequenceDiagram
-    participant U as Client/User
-    participant I as Ingestion Controller
-    participant RI as RabbitMQ (Ingestion Queue)
-    participant AS as Analysis Service
-    participant RE as Rule Engine (Regex/LLM)
-    participant DB as MongoDB
-    participant RA as RabbitMQ (Anomaly Queue)
-    participant DL as Dispatch Listener
-    participant J as Jira/Email Service
+![LogAI Architecture](drawings/flow%20diagram.png)
 
-    U->>I: Post Logs (with Tenant ID)
-    I->>RI: Publish Log Event
-    RI->>AS: Consume Log Event
-    AS->>RE: Analyze Content
-    RE-->>AS: Anomaly Detected
-    AS->>DB: Save Anomaly
-    AS->>RA: Publish Anomaly Event
-    RA->>DL: Consume Anomaly
-    DL->>J: Create Jira Ticket / Send Email
+### Data Workflow:
+1.  **Ingestion**: Logs are sent via REST API or File Upload to the `IngestionController`.
+2.  **Buffering**: Log events are pushed to RabbitMQ (`ingestion.queue`) for asynchronous processing.
+3.  **Analysis**: The `AnalysisService` orchestrates evaluations through Regex and LLM engines. Traces are buffered in **Redis** for context.
+4.  **Persistence**: Detected anomalies and their suggested solutions are stored in **MongoDB**.
+5.  **Dispatch**: High-severity anomalies trigger a task in RabbitMQ (`anomaly.exchange`).
+6.  **Action**: The `DispatchListener` creates Jira tickets and sends notifications.
+
+---
+
+## 📂 Project Structure
+
+```text
+java-log-analyzer/
+├── src/main/java/com/loganalyzer/
+│   ├── analysis/       # Rule engines, AI analysis, and anomaly controllers
+│   ├── auth/           # Identity and Access Management (Tenant models)
+│   ├── core/           # Shared configs, DTOs, and base entities
+│   ├── dispatch/       # Notification and Ticket services (Jira/Email)
+│   └── ingestion/      # Log parsing and ingestion listeners
+├── src/main/resources/
+│   ├── static/         # Modern Dashboard UI (HTML, CSS, JS)
+│   └── templates/      # Dashboard templates
+├── drawings/           # Architecture diagrams
+├── docs/               # Technical documentation
+├── docker-compose.yml  # Infrastructure setup (Mongo, Redis, RabbitMQ, Ollama)
+└── pom.xml             # Build and dependency configuration
 ```
 
-## Component Overview
+---
 
-| Component | Responsibility |
-| :--- | :--- |
-| `com.loganalyzer.ingestion` | Handles entry points, file parsing, and initial queuing. |
-| `com.loganalyzer.analysis` | Core logic for detecting threats and anomalies. |
-| `com.loganalyzer.dispatch` | External integrations for alerting and ticketing. |
-| `com.loganalyzer.auth` | Manages users, roles, and tenant isolation. |
-| `com.loganalyzer.core` | Shared models and cross-cutting configurations. |
+## 🛠️ Setup & Installation
+
+### Prerequisites
+- **Java 17** or higher
+- **Maven 3.8+**
+- **Docker Desktop**
+
+### 1. Spin up Infrastructure
+Launch the database, cache, message broker, and local LLM (Ollama):
+```bash
+docker-compose up -d
+```
+
+### 2. Configure Environment
+Update `src/main/resources/application.properties` with your credentials:
+- **Jira API Tokens**
+- **LLM Settings** (Default is Ollama at localhost:11434)
+- **Database URIs**
+
+### 3. Build & Run
+```bash
+mvn clean install
+mvn spring-boot:run
+```
+
+Access the dashboard at: `http://localhost:8080`
+
+---
+
+## 📊 Dashboard UI
+The dashboard provides a real-time feed of anomalies divided into **Open** and **Resolved** issues, with a direct view into execution traces and AI-suggested solutions.
+
+> [!TIP]
+> Use the **Manual Analysis** tab to upload and analyze historical log files instantly using the AI engine.
