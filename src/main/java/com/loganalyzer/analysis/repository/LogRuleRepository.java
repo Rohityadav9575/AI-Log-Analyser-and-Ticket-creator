@@ -9,5 +9,4 @@ import java.util.List;
 
 @Repository
 public interface LogRuleRepository extends MongoRepository<LogRule, String> {
-    List<LogRule> findByTenantId(String tenantId);
 }

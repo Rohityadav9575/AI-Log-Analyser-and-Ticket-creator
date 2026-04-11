@@ -2,12 +2,15 @@ package com.loganalyzer.ingestion.controller;
 
 import com.loganalyzer.ingestion.service.LogIngestor;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/ingestion")
 @RequiredArgsConstructor
@@ -15,15 +18,13 @@ public class IngestionController {
 
     private final LogIngestor logIngestor;
 
-    @PostMapping("/upload")
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> uploadLogs(
-            @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("source") String source,
             @RequestParam("files") List<MultipartFile> files) {
-        
-        // In a real scenario, X-Tenant-ID comes from the JWT Token via SecurityContext
-        logIngestor.ingestLogs(tenantId, source, files);
-        
-        return ResponseEntity.ok("Files uploaded and queued for processing successfully.");
+            
+        log.info("📥 Direct ingestion request received from source: {}", source);
+        logIngestor.ingestLogs(source, files);
+        return ResponseEntity.ok("Ingestion started for " + files.size() + " files");
     }
 }

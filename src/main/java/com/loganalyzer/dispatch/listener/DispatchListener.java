@@ -1,6 +1,7 @@
 package com.loganalyzer.dispatch.listener;
 
 import com.loganalyzer.analysis.entity.Anomaly;
+import com.loganalyzer.analysis.repository.AnomalyRepository;
 import com.loganalyzer.core.config.RabbitMQConfig;
 import com.loganalyzer.dispatch.service.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -15,24 +16,30 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DispatchListener {
 
+    private final AnomalyRepository anomalyRepository;
     private final List<NotificationService> notificationServices;
 
     @RabbitListener(queues = RabbitMQConfig.ANOMALY_QUEUE)
     public void consumeAnomaly(Anomaly anomaly) {
-        log.info("Received anomaly from RabbitMQ for dispatching: {}", anomaly.getId());
-        
+        log.info("📥 Dispatcher received anomaly from RabbitMQ: [ID: {}, Rule: {}, Severity: {}]",
+                anomaly.getId(), anomaly.getMatchedRuleId(), anomaly.getSeverityLevel());
+
         try {
-            // Dispatch based on notification type explicitly requested, or broadcast to all relevant
+            log.info("📢 Triggering notification services for anomaly {}...", anomaly.getId());
             for (NotificationService service : notificationServices) {
-                // If the LogRule has specific actions, you would check them here.
-                // Assuming we want to dispatch to both EMAIL and JIRA if configured:
                 if (service.notificationType().equals("EMAIL") || service.notificationType().equals("JIRA")) {
+                    log.info("🔔 Invoking {} notification service...", service.notificationType());
                     service.dispatch(anomaly);
                 }
             }
-            // Update Anomaly status in DB to true (dispatched = true) if needed.
+            
+            // Mark as dispatched in MongoDB
+            anomaly.setDispatched(true);
+            anomalyRepository.save(anomaly);
+            log.info("✅ Anomaly {} status updated to DISPATCHED=true", anomaly.getId());
+            
         } catch (Exception e) {
-            log.error("Failed to dispatch anomaly: {}", anomaly.getId(), e);
+            log.error("❌ Failed to dispatch anomaly: {}", anomaly.getId(), e);
         }
     }
 }

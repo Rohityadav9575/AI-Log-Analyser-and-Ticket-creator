@@ -15,8 +15,6 @@ public abstract class BaseEntity {
     private String id;
 
     @Indexed
-    private String tenantId;
-
     @CreatedDate
     private LocalDateTime createdAt;
 
