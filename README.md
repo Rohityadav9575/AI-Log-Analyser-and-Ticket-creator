@@ -1,6 +1,6 @@
-# LogAI - Intelligent Log Analyzer & Ticket Creator
+# LogiAI - Intelligent Log Analyzer & Ticket Creator
 
-LogAI is an AI-powered log analysis platform designed to detect anomalies in real-time, perform root cause analysis using Large Language Models (LLMs), and automate incident management via Jira and other notification channels.
+LogiAI is an AI-powered log analysis engine built for modern incident response. Leveraging Spring Boot, MongoDB, and RabbitMQ, it uses intelligent semantic analysis to catch anomalies in real-time and automates Jira ticketing to streamline your DevOps workflow.
 
 ## 🚀 Key Features
 
@@ -22,7 +22,7 @@ LogAI is an AI-powered log analysis platform designed to detect anomalies in rea
 
 The following diagram illustrates the end-to-end data flow from log ingestion to incident resolution:
 
-![LogAI Architecture](drawings/flow%20diagram.png)
+![LogiAI Architecture](drawings/flow%20diagram.png)
 
 ### Data Workflow:
 1.  **Ingestion**: Logs are sent via REST API or File Upload to the `IngestionController`.

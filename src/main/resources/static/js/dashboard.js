@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Tab Switching Logic ---
-    window.switchTab = function(status) {
+    window.switchTab = function (status) {
         currentStatus = status;
         document.querySelectorAll('.status-tab').forEach(btn => btn.classList.remove('active'));
         document.getElementById(`tab-${status.toLowerCase()}`).classList.add('active');
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/api/v1/anomalies?status=${currentStatus}`);
             if (!response.ok) throw new Error('Failed to fetch anomalies');
-            
+
             const anomalies = await response.json();
             renderAnomalies(anomalies);
             updateStats(anomalies.length);
@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
         anomalies.forEach(anomaly => {
             const card = document.createElement('div');
             card.className = `anomaly-card priority-${anomaly.severityLevel.toLowerCase()}`;
-            
+
             const timestamp = new Date(anomaly.createdAt).toLocaleString();
-            
+
             card.innerHTML = `
                 <div class="anomaly-header">
                     <div>
@@ -76,17 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="anomaly-actions">
                     <button onclick="window.viewTrace('${anomaly.correlationId}')" class="secondary-btn">🔍 View Trace</button>
-                    ${anomaly.status === 'PENDING' ? 
-                        `<button onclick="window.resolveAnomaly('${anomaly.id}')" class="resolve-btn action-btn">Mark as Resolved</button>` : 
-                        `<button onclick="window.reopenAnomaly('${anomaly.id}')" class="reopen-btn action-btn">Re-open Issue</button>`
-                    }
+                    ${anomaly.status === 'PENDING' ?
+                    `<button onclick="window.resolveAnomaly('${anomaly.id}')" class="resolve-btn action-btn">Mark as Resolved</button>` :
+                    `<button onclick="window.reopenAnomaly('${anomaly.id}')" class="reopen-btn action-btn">Re-open Issue</button>`
+                }
                 </div>
             `;
             anomalyFeed.appendChild(card);
         });
     }
 
-    window.resolveAnomaly = async function(id) {
+    window.resolveAnomaly = async function (id) {
         try {
             const response = await fetch(`/api/v1/anomalies/${id}/status?status=RESOLVED`, {
                 method: 'PATCH'
@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.reopenAnomaly = async function(id) {
+    window.reopenAnomaly = async function (id) {
         try {
             const response = await fetch(`/api/v1/anomalies/${id}/status?status=PENDING`, {
                 method: 'PATCH'
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.viewTrace = async function(correlationId) {
+    window.viewTrace = async function (correlationId) {
         if (!correlationId || correlationId === 'n/a') {
             window.showToast('No execution trace available.', 'error');
             return;
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch(`/api/v1/anomalies/trace/${correlationId}`);
             if (!response.ok) throw new Error('Trace not found');
-            
+
             const trace = await response.json();
             renderTrace(trace);
         } catch (error) {
@@ -167,6 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Toast Helper (Assumed available globally or added here)
-window.showToast = function(msg, status = 'success') {
+window.showToast = function (msg, status = 'success') {
     console.log(`TOAST: [${status}] ${msg}`);
 };

@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Log Analyzer | Real-time Observability</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
     <meta name="description" content="AI-powered real-time microservice log analysis and tracing.">
 </head>
+
 <body class="dark-theme">
     <div class="background-blobs">
         <div class="blob blob-1"></div>
@@ -25,7 +29,7 @@
                     <span class="icon">≡</span>
                 </button>
                 <span class="logo-icon">🚀</span>
-                <span class="logo-text">LogAI</span>
+                <span class="logo-text">LogiAI</span>
             </div>
             <ul class="nav-links">
                 <li class="nav-item active" data-target="realtime-view">
@@ -105,7 +109,7 @@
                     <div class="upload-section card">
                         <h2>Upload Logs Manually</h2>
                         <p>One-off AI analysis for log files (multi-file supported).</p>
-                        
+
                         <div class="drop-zone" id="dropZone">
                             <div class="drop-zone-content">
                                 <span class="upload-icon">📄</span>
@@ -114,7 +118,7 @@
                             </div>
                             <input type="file" id="fileInput" hidden accept=".log,.txt,.csv" multiple>
                         </div>
-                        
+
                         <div id="fileInfo" class="file-info hidden">
                             <div class="file-list-container">
                                 <span class="file-name">filename.log</span>
@@ -160,4 +164,5 @@
     <script src="js/app.js"></script>
     <script src="js/dashboard.js"></script>
 </body>
+
 </html>
