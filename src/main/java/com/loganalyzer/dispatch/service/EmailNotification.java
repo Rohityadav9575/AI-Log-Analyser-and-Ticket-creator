@@ -11,8 +11,8 @@ public class EmailNotification implements NotificationService {
     @Override
     public void dispatch(Anomaly anomaly) {
         // In a real application, inject JavaMailSender here
-        log.info("📧 MOCK EMAIL DISPATCHED: Alert for Tenant {} -> Rule Matched: {}, Severity: {}", 
-            anomaly.getTenantId(), anomaly.getMatchedRuleId(), anomaly.getSeverityLevel());
+        log.info("📧 MOCK EMAIL DISPATCHED: Alert -> Rule Matched: {}, Severity: {}", 
+                anomaly.getMatchedRuleId(), anomaly.getSeverityLevel());
             
         // Sending email logic...
     }

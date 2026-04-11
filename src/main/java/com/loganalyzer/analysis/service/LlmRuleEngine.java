@@ -66,13 +66,16 @@ public class LlmRuleEngine implements RuleEngine {
 
             HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-            log.info("🤔 Sending log {} to Hugging Face LLM ({}) for evaluation...", event.getId(), llmModel);
+            log.info("🤔 Sending log {} to LLM ({}) for evaluation...", event.getId(), llmModel);
+            log.info("📝 LLM Prompt: {}", finalPrompt);
+            log.info("⏳ Waiting for response from model...");
+            
             ResponseEntity<String> response = restTemplate.exchange(llmApiUrl, HttpMethod.POST, request, String.class);
 
             JsonNode root = objectMapper.readTree(response.getBody());
             String llmResponse = root.path("response").asText("").trim().toUpperCase();
 
-            log.info("🤖 HuggingFace LLM Response: {}", llmResponse);
+            log.info("🤖 Model Response: {}", llmResponse);
 
             return llmResponse.contains("YES") && !llmResponse.contains("NO");
 

@@ -26,7 +26,6 @@ public class ManualAnalysisController {
 
     @PostMapping("/analyze")
     public ResponseEntity<AnalysisResult> analyzeManualLog(
-            @RequestHeader("X-Tenant-ID") String tenantId,
             @RequestParam("files") List<MultipartFile> files) {
         log.info("📥 Manual upload for log analysis: {} files", files.size());
         

@@ -3,136 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Log Analyzer | Manual Analysis</title>
+    <title>AI Log Analyzer | Real-time Observability</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
-    <meta name="description" content="AI-powered log analysis and incident automation platform.">
+    <meta name="description" content="AI-powered real-time microservice log analysis and tracing.">
 </head>
-<body>
+<body class="dark-theme">
     <div class="background-blobs">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
     </div>
 
-    <div class="container">
-        <header>
-            <div class="logo">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar" id="sidebar">
+            <div class="logo-area">
+                <button id="sidebar-toggle" class="sidebar-toggle-btn">
+                    <span class="icon">≡</span>
+                </button>
                 <span class="logo-icon">🚀</span>
-                <h1>AI Log Analyzer</h1>
+                <span class="logo-text">LogAI</span>
             </div>
-            <div class="tenant-selector">
-                <label for="tenantId">Tenant ID:</label>
-                <input type="text" id="tenantId" value="DEFAULT_TENANT" placeholder="Enter Tenant ID">
-            </div>
-        </header>
-
-        <main>
-            <section class="upload-section card">
-                <h2>Manual Log Analysis</h2>
-                <p>Upload a log file for instant AI-based anomaly detection and resolution suggestions.</p>
-                
-                <div class="drop-zone" id="dropZone">
-                    <div class="drop-zone-content">
-                        <span class="upload-icon">📄</span>
-                        <p>Drag & drop or <span>browse</span></p>
-                        <small>Supports multiple .log, .txt, .csv files</small>
-                    </div>
-                    <input type="file" id="fileInput" hidden accept=".log,.txt,.csv" multiple>
+            <ul class="nav-links">
+                <li class="nav-item active" data-target="realtime-view">
+                    <span class="icon">📊</span>
+                    <span class="text">Dashboard</span>
+                </li>
+                <li class="nav-item" data-target="manual-view">
+                    <span class="icon">📄</span>
+                    <span class="text">Manual Analysis</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="dot pulse"></span>
+                    <span class="status-msg">Live Backend</span>
                 </div>
-                
-                <div id="fileInfo" class="file-info hidden">
-                    <div class="file-list-container">
-                        <span class="file-name">filename.log</span>
-                        <span id="fileCount" class="file-count"></span>
-                    </div>
-                    <div class="action-group">
-                        <button id="clearBtn" class="secondary-btn">Clear</button>
-                        <button id="analyzeBtn" class="primary-btn">Start AI Analysis</button>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar">
+                <h2 id="view-title">Real-time Dashboard</h2>
+                <div class="top-bar-actions">
+                    <div class="status-indicator">
+                        <span class="pulse"></span> Monitoring Live Logs...
                     </div>
                 </div>
-            </section>
+            </header>
 
-            <div id="loader" class="loader-container hidden">
-                <div class="spinner"></div>
-                <p id="loadingMsg">Consulting the AI Engine...</p>
-                <p class="sub-loader">This may take up to 2 minutes for deep reasoning.</p>
-            </div>
-
-            <section id="resultsSection" class="results-section hidden">
-                <div class="card result-card">
-                    <div class="result-header">
-                        <div class="severity-badge" id="severityBadge">MEDIUM</div>
-                        <h3>Analysis Results</h3>
-                    </div>
-                    
-                    <div class="result-body">
-                        <div class="summary-group">
-                            <h4>Log Summary</h4>
-                            <p id="logSummary">AI summary will appear here.</p>
-                        </div>
-
-                        <div class="errors-group">
-                            <h4>Identified Errors</h4>
-                            <ul id="errorList">
-                                <!-- Errors will be injected here -->
-                            </ul>
-                        </div>
-
-                        <div class="solution-group highlight">
-                            <h4>💡 Suggested Solution</h4>
-                            <p id="suggestedSolution">AI solution will appear here.</p>
-                        </div>
-                    </div>
-
-                    <div class="result-footer">
-                        <button id="clearResultsBtn" class="secondary-btn">Analyze New Logs</button>
-                        <button id="showJiraBtn" class="jira-btn">
-                            <span class="icon">🎫</span> Create Jira Ticket
+            <div class="view-container">
+                <!-- Real-time Dashboard View -->
+                <section id="realtime-view" class="view active">
+                    <!-- Dashboard Tabs -->
+                    <div class="status-switch-container">
+                        <button id="tab-pending" class="status-tab active" onclick="switchTab('PENDING')">
+                            <span class="tab-icon">📂</span>
+                            <div class="tab-info">
+                                <span class="tab-label">Open Issues</span>
+                            </div>
+                        </button>
+                        <button id="tab-resolved" class="status-tab" onclick="switchTab('RESOLVED')">
+                            <span class="tab-icon">✅</span>
+                            <div class="tab-info">
+                                <span class="tab-label">Resolved</span>
+                            </div>
                         </button>
                     </div>
-                </div>
-            </section>
+
+                    <div class="status-bar">
+                        <div class="stat-card">
+                            <span class="label">Total Anomalies</span>
+                            <span class="value" id="stat-total-anomalies">0</span>
+                        </div>
+                        <div class="stat-card">
+                            <span class="label">System Status</span>
+                            <span class="value success">HEALTHY</span>
+                        </div>
+                    </div>
+
+                    <div class="anomaly-feed-header">
+                        <h3>Detection Feed</h3>
+                        <span class="live-indicator">● LIVE</span>
+                    </div>
+
+                    <div id="anomaly-feed" class="anomaly-feed">
+                        <!-- Anomalies will be injected here -->
+                        <div class="empty-state">
+                            <div class="spinner-small"></div>
+                            <p>Waiting for anomalies from microservices...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Manual Analysis View -->
+                <section id="manual-view" class="view">
+                    <div class="upload-section card">
+                        <h2>Upload Logs Manually</h2>
+                        <p>One-off AI analysis for log files (multi-file supported).</p>
+                        
+                        <div class="drop-zone" id="dropZone">
+                            <div class="drop-zone-content">
+                                <span class="upload-icon">📄</span>
+                                <p>Drag & drop or <span>browse</span></p>
+                                <small>Supports .log, .txt, .csv</small>
+                            </div>
+                            <input type="file" id="fileInput" hidden accept=".log,.txt,.csv" multiple>
+                        </div>
+                        
+                        <div id="fileInfo" class="file-info hidden">
+                            <div class="file-list-container">
+                                <span class="file-name">filename.log</span>
+                                <span id="fileCount" class="file-count"></span>
+                            </div>
+                            <div class="action-group">
+                                <button id="clearBtn" class="secondary-btn">Clear</button>
+                                <button id="analyzeBtn" class="primary-btn">Start AI Analysis</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="manual-loader" class="loader-container hidden">
+                        <div class="spinner"></div>
+                        <p>AI Engine is thinking...</p>
+                    </div>
+
+                    <div id="resultsSection" class="results-section hidden">
+                        <!-- Results injected here (same as old index) -->
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 
-    <!-- Jira Modal -->
-    <div id="jiraModal" class="modal-overlay hidden">
-        <div class="modal card">
+    <!-- Trace Modal -->
+    <div id="traceModal" class="modal-overlay hidden">
+        <div class="modal large card">
             <div class="modal-header">
-                <h2>Create Jira Ticket</h2>
-                <button id="closeModal" class="close-btn">&times;</button>
+                <h2>Correlation Trace: <span id="current-trace-id">N/A</span></h2>
+                <button id="closeTraceModal" class="close-btn">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="jiraSummary">Summary</label>
-                    <input type="text" id="jiraSummary" placeholder="Ticket Summary">
+            <div class="modal-body scrollable">
+                <div class="trace-visual">
+                    <!-- Sequence view of logs -->
                 </div>
-                <div class="form-group">
-                    <label for="jiraDescription">Description</label>
-                    <textarea id="jiraDescription" rows="6" placeholder="Details about the anomaly..."></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="jiraPriority">Priority</label>
-                        <select id="jiraPriority">
-                            <option value="Low">Low</option>
-                            <option value="Medium" selected>Medium</option>
-                            <option value="High">High</option>
-                            <option value="Highest">Highest</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Issue Type</label>
-                        <input type="text" value="Bug" disabled>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button id="cancelJira" class="secondary-btn">Cancel</button>
-                <button id="confirmJira" class="primary-btn">Create Ticket</button>
             </div>
         </div>
     </div>
@@ -140,5 +158,6 @@
     <div id="toast" class="toast hidden">Message goes here</div>
 
     <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
 </body>
 </html>

@@ -14,8 +14,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class LogEvent implements Serializable {
     private String id;
-    private String tenantId;
+    private String serviceName; // The name of the microservice
     private String source; // e.g. "nginx", "webapp-backend", "drive"
     private String content;
+    private String logLevel; // INFO, WARN, ERROR, FATAL
+    private String correlationId; // Flow ID for tracing across services
     private LocalDateTime timestamp;
 }

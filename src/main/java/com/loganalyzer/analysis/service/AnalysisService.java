@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -21,43 +22,88 @@ public class AnalysisService {
 
     private final LogRuleRepository ruleRepository;
     private final AnomalyRepository anomalyRepository;
-    private final List<RuleEngine> ruleEngines; // Inject all implementations of RuleEngine
+    private final List<RuleEngine> ruleEngines;
     private final RabbitTemplate rabbitTemplate;
+    private final RedisTemplate<String, LogEvent> redisTemplate;
+    private final DetailedAnalysisService detailedAnalysisService;
 
-    public void analyzeLogEvent(LogEvent event) {
-        log.debug("Analyzing log event: {}", event.getId());
-        List<LogRule> cachedRules = getRulesForTenant(event.getTenantId());
+    public void analyze(LogEvent event) {
+        log.info("🔍 Analyzing log event: [ID: {}, Service: {}, Level: {}]", 
+                event.getId(), event.getServiceName(), event.getLogLevel());
 
-        for (LogRule rule : cachedRules) {
+        List<LogRule> allRules = ruleRepository.findAll();
+        log.info("📋 Found {} total rules in system", allRules.size());
+
+        for (LogRule rule : allRules) {
+            log.debug("🕵️ Checking rule '{}' (Type: {}) against log event...", rule.getRuleName(), rule.getEngineType());
             for (RuleEngine engine : ruleEngines) {
                 if (engine.evaluate(event, rule)) {
-                    log.warn("Anomaly detected! Rule matched: {}", rule.getRuleName());
-                    
-                    Anomaly anomaly = new Anomaly();
-                    anomaly.setLogEventId(event.getId());
-                    anomaly.setMatchedRuleId(rule.getId());
-                    anomaly.setSource(event.getSource());
-                    anomaly.setTenantId(event.getTenantId());
-                    anomaly.setSeverityLevel(rule.getSeverityLevel());
-                    anomaly.setLogContent(event.getContent());
-                    anomaly.setDispatched(false);
-                    
-                    Anomaly savedAnomaly = anomalyRepository.save(anomaly);
-                    
-                    // Publish anomaly for dispatch service
-                    rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ANOMALY_ROUTING_KEY, savedAnomaly);
-                    
-                    // Stop checking other rules if we just want one match per log line, 
-                    // or remove the break if multiple matches are desired.
-                    break;
+                    log.warn("🚨 Anomaly detected! Rule matched: '{}'", rule.getRuleName());
+                    saveAndPublishAnomaly(event, rule.getId(), rule.getSeverityLevel(), null);
+                    return; // Stop checking other rules
                 }
             }
         }
+
+        // ==========================================
+        // SMART FALLBACK: If no rules matched, but it's an ERROR/WARN, analyze anyway!
+        // ==========================================
+        boolean isHighSeverity = "ERROR".equalsIgnoreCase(event.getLogLevel()) || 
+                                 "WARN".equalsIgnoreCase(event.getLogLevel()) ||
+                                 "FATAL".equalsIgnoreCase(event.getLogLevel());
+
+        if (isHighSeverity) {
+            log.info("📢 No rules matched, but log level is {}. Forcing Deep AI Analysis...", event.getLogLevel());
+            saveAndPublishAnomaly(event, "FALLBACK_AI_RULE", event.getLogLevel(), "Log level indicates potential issue.");
+        } else {
+            log.info("✅ Analysis completed for log {}. No anomalies found.", event.getId());
+        }
     }
 
-    @Cacheable(value = "tenantRules", key = "#tenantId")
-    public List<LogRule> getRulesForTenant(String tenantId) {
-        log.info("Fetching rules from DB for tenant: {}", tenantId);
-        return ruleRepository.findByTenantId(tenantId);
+    private void saveAndPublishAnomaly(LogEvent event, String ruleId, String severity, String reason) {
+        Anomaly anomaly = new Anomaly();
+        anomaly.setLogEventId(event.getId());
+        anomaly.setMatchedRuleId(ruleId);
+        anomaly.setServiceName(event.getServiceName());
+        anomaly.setSource(event.getSource());
+        anomaly.setLogLevel(event.getLogLevel());
+        anomaly.setCorrelationId(event.getCorrelationId());
+        anomaly.setSeverityLevel(severity);
+        anomaly.setLogContent(event.getContent());
+        anomaly.setStatus("PENDING");
+        
+        // Fetch context from Redis
+        if (event.getCorrelationId() != null) {
+            String traceKey = "logs:trace:" + event.getCorrelationId();
+            List<LogEvent> trace = redisTemplate.opsForList().range(traceKey, 0, -1);
+            anomaly.setContextTrace(trace);
+            
+            log.info("🧠 Requesting AI Root Cause Analysis for {} level anomaly...", severity);
+            String traceSummary = formatTraceForLlm(trace);
+            var result = detailedAnalysisService.analyzeLogContent(traceSummary);
+            anomaly.setSuggestedSolution(result.getSuggestedSolution());
+        }
+        
+        anomaly.setDispatched(false);
+        Anomaly savedAnomaly = anomalyRepository.save(anomaly);
+        log.info("💾 Anomaly saved to DB with ID: {}", savedAnomaly.getId());
+        
+        // Publish anomaly
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE, RabbitMQConfig.ANOMALY_ROUTING_KEY, savedAnomaly);
+    }
+
+    private String formatTraceForLlm(List<LogEvent> trace) {
+        StringBuilder sb = new StringBuilder();
+        for (LogEvent logItem : trace) {
+            sb.append("[").append(logItem.getTimestamp()).append("] ")
+              .append(logItem.getServiceName()).append(": ")
+              .append(logItem.getContent()).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public List<LogRule> getAllRules() {
+        log.info("Fetching all rules from DB");
+        return ruleRepository.findAll();
     }
 }

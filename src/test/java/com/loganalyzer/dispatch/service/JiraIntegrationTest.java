@@ -34,7 +34,7 @@ class JiraIntegrationTest {
         // Create a dummy Anomaly to test Jira creation
         Anomaly dummyAnomaly = new Anomaly();
         dummyAnomaly.setId(UUID.randomUUID().toString());
-        dummyAnomaly.setTenantId("TEST_TENANT_123");
+        dummyAnomaly.setServiceName("TEST_SERVICE");
         dummyAnomaly.setMatchedRuleId("TEST_RULE_BUG");
         dummyAnomaly.setSource("Manual Integration Test");
         dummyAnomaly.setLogContent("This is a test log message ensuring our Bug creation integration works!");

@@ -106,7 +106,7 @@ class LlmIntegrationTest {
         System.out.println("🚀 Formatting Anomaly object & dispatching to Jira...");
         Anomaly aiAnomaly = new Anomaly();
         aiAnomaly.setId(UUID.randomUUID().toString().substring(0, 8)); // Short ID
-        aiAnomaly.setTenantId("AI_TEST_TENANT");
+        aiAnomaly.setServiceName("AI_TEST_SERVICE");
         aiAnomaly.setMatchedRuleId("AI_EXPERT_EVALUATION");
         aiAnomaly.setSource("LogAnalyzer Test Suite");
         aiAnomaly.setSeverityLevel("HIGH");

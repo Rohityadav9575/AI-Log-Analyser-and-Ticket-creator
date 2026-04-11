@@ -62,12 +62,12 @@ public class JiraTicketService implements NotificationService {
             issuetype.put("name", "Bug"); // Changed to Bug as requested
 
             fields.put("project", project);
+            fields.put("issuetype", issuetype);
             fields.put("summary", "[Auto-Generated] Anomaly Detected: Rule " + anomaly.getMatchedRuleId());
             fields.put("description", "An anomaly was detected with severity: " + anomaly.getSeverityLevel() + 
-                                     "\n\nDetails:\nTenant ID: " + anomaly.getTenantId() + 
-                                     "\nLog Source: " + anomaly.getSource() +
-                                     "\nMessage: " + anomaly.getLogContent());
-            fields.put("issuetype", issuetype);
+                                     "\n\nDetails:\nRule: " + anomaly.getMatchedRuleId() + 
+                                     "\nSeverity: " + anomaly.getSeverityLevel() + 
+                                     "\nSource: " + anomaly.getSource());
 
             body.put("fields", fields);
 
